@@ -51,7 +51,7 @@ Shader::Shader(const char* vertexFile, const char* fragmentFile)
 	// Attach the Vertex and Fragment Shaders to the Shader Program
 	glAttachShader(ID, vertexShader);
 	glAttachShader(ID, fragmentShader);
-	// Wrap-up/Link all the shaders together into the Shader Program
+	//
 	glLinkProgram(ID);
 	// revisa si compila
 	compileErrors(ID, "PROGRAM");
