@@ -1,6 +1,7 @@
 #include<iostream>
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
+#include<stb/stb_image.h>
 //incluimos librerias de OpenGL y GLFW para poder crear una ventana y renderizar gráficos en ella.
 
 #include"shaderClass.h"
@@ -22,19 +23,16 @@ int main()
 
     GLfloat vertices[] = //usamos el float de open gl para designar la ubicacion de los vertices
     {                                                                                
-		-0.5f, -0.5f * float(sqrt(3)) / 3,     0.0f, 0.8f, 0.3f, 0.02f, // vertice izquierdo y su color
-		 0.5f, -0.5f * float(sqrt(3)) / 3,     0.0f, 0.8f, 0.3f, 0.02f, // vertice derecho y su color
-		 0.0f,  0.5f * float(sqrt(3)) * 2 / 3, 0.0f, 1.0f, 0.6f, 0.32f, // vertice superior, generamos un triangulo equilatero
-		 -0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, 0.9f, 0.45f, 0.17f, // vertice inferior
-		0.5f / 2, 0.5f * float(sqrt(3)) / 6,   0.0f, 0.9f, 0.45f, 0.17f, // vertice inferior derecho
-		0.0f, -0.5f * float(sqrt(3)) / 3,      0.0f, 0.8f, 0.3f, 0.02f, // vertice inferior izquierdo
+	-0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,	0.0f, 0.0f, // vertice inferior izquierdo
+	-0.5f,  0.5f, 0.0f,     0.0f, 1.0f, 0.0f,	0.0f, 1.0f, // vertice superior izquierdo
+	 0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,	1.0f, 1.0f, // vertice superior derecho
+	 0.5f, -0.5f, 0.0f,     1.0f, 1.0f, 1.0f,	1.0f, 0.0f, // vertice inferior derecho
     };
 
 	GLuint indices[] = //indices para dibujar el triangulo
 	{
-		0, 3, 5,
-		3, 2, 4,
-		5, 4 , 1
+	0, 2, 1, // Upper triangle
+	0, 3, 2 // Lower triangle
 	};
 
     GLFWwindow * window = glfwCreateWindow(800, 800, "Youtube", NULL, NULL); //especificaciones de la ventana (ancho, alto, título, pantalla completa )
@@ -60,15 +58,60 @@ int main()
 	VBO VBO1(vertices, sizeof(vertices)); //creamos un objeto de la clase VBO para almacenar los datos de los vertices
 	EBO EBO1(indices, sizeof(indices)); //creamos un objeto de la clase EBO para almacenar los datos de los indices
 
-	VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 6 * sizeof(float), (void*)0); //ubicamos los datos del VBO, definiendo posicion y color
-	VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 6 * sizeof(float), (void*)(3 * sizeof(float))); //asignamos el buffer de vertices al VAO
-	
+	VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 8 * sizeof(float), (void*)0); //ubicamos los datos del VBO, definiendo posicion y color
+	VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 8 * sizeof(float), (void*)(3 * sizeof(float))); //asignamos el buffer de vertices al VAO
+	VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 8 * sizeof(float), (void*)(6 * sizeof(float))); //asignamos las coordenadas de textura al VAO
+
 	VAO1.Unbind(); // 1. Desvincular el VAO primero para "cerrar" el estado
 	VBO1.Unbind(); // 2. Desvincular VBO
 	EBO1.Unbind(); // 3. desvincular EBO
 
 	GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
 
+	//textura
+
+	int widthImg, heightImg, numColCh;
+
+	stbi_set_flip_vertically_on_load(true);
+
+	unsigned char* bytes = stbi_load(
+		"minecraft-png-icon-16704.png",&widthImg,&heightImg,&numColCh,4
+	);
+
+
+	GLuint texture; //creamos un objeto de la clase GLuint para almacenar la textura
+	glGenTextures(1, &texture); //generamos la textura
+	glActiveTexture(GL_TEXTURE0); //activamos la textura)
+	glBindTexture(GL_TEXTURE_2D, texture); //asignamos la textura a la variable texture)
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //filtro de minificacion)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); //repetimos la textura en el eje x)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); //repetimos la textura en el eje y)
+
+	// float borderColor[] = { 1.0f, 1.0f, 0.0f, 1.0f }; //color de borde
+	// glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor); //asignamos el color de borde
+
+	glTexImage2D(
+		GL_TEXTURE_2D,
+		0,
+		GL_RGBA,
+		widthImg,
+		heightImg,
+		0,
+		GL_RGBA,
+		GL_UNSIGNED_BYTE,
+		bytes
+	);
+	glGenerateMipmap(GL_TEXTURE_2D); //generamos mipmaps para la textura)
+
+	stbi_image_free(bytes); //liberamos la memoria de la imagen
+	glBindTexture(GL_TEXTURE_2D, 0); //desvinculamos la textura)
+
+	GLuint tex0uni = glGetUniformLocation(shaderProgram.ID, "tex0"); //obtenemos la ubicacion de la textura en el shader)
+	shaderProgram.Activate(); //activamos el shader)
+	glUniform1i(tex0uni, 0); //asignamos la textura al shader
 
     while (!glfwWindowShouldClose(window)) //ciclo para que no se cierre el codigo
     {
@@ -76,8 +119,9 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 		shaderProgram.Activate(); //usamos el programa de shader)
 		glUniform1f(uniID, 0.5f);
+		glBindTexture(GL_TEXTURE_2D, texture);
 		VAO1.Bind(); //asignamos el buffer de vertices)
-		glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0); //dibujamos el triangulo)
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); //dibujamos el triangulo)
 		glfwSwapBuffers(window); //intercambiamos el buffer frontal con el trasero para ver el color designado
 		glfwPollEvents(); //funcion para que la ventana no se cierre y pueda recibir eventos
 
@@ -86,8 +130,10 @@ int main()
     }
 
 	VAO1.Delete(); //eliminamos el VAO
-	VBO1.Delete(); //eliminamos el VBO
 	EBO1.Delete(); //eliminamos el EBO
+	VBO1.Delete(); //eliminamos el VBO
+	
+	glDeleteTextures(1, &texture); //eliminamos la textura
 	shaderProgram.Delete(); //eliminamos el shader program
 
 
