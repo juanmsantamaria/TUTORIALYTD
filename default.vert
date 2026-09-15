@@ -19,6 +19,7 @@ void main()
     // Enviamos el color del vértice al fragment shader
     color = aColor;
     texCoord = aTexCoord;
+
 }
 
 
