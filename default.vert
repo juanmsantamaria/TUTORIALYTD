@@ -11,15 +11,18 @@ out vec2 texCoord; // Variable que enviamos al fragment shader
 
 uniform float scale; // Variable que permite modificar el tamaño del objeto
 
+uniform mat4 model; // Matriz de transformación del modelo
+uniform mat4 view; // Matriz de transformación de la cámara
+uniform mat4 proj; // Matriz de proyección
+
+
 void main()
 {
     // Calculamos la nueva posición del vértice aplicando la escala
-    gl_Position = vec4(aPos + aPos * scale, 1.0);
+    gl_Position = proj * view * model * vec4(aPos, 1.0);
 
     // Enviamos el color del vértice al fragment shader
     color = aColor;
     texCoord = aTexCoord;
 
 }
-
-
