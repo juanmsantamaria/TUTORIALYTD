@@ -11,7 +11,7 @@
 #include"VAO.h"
 #include"EBO.h"
 #include"Texture.h"
-
+#include"CAMERA.h"
 
 
 
@@ -29,11 +29,12 @@ int main()
 
 	GLfloat vertices[] = //usamos el float de open gl para designar la ubicacion de los vertices
 	{
-	-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-	-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
-	 0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-	 0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
-	 0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	2.5f, 5.0f
+		//    posición              color                 UV
+			-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
+			-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
+			 0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
+			 0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
+			 0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	2.5f, 5.0f
 	};
 
 	GLuint indices[] = //indices para dibujar el triangulo
@@ -77,53 +78,37 @@ int main()
 	VBO1.Unbind(); // 2. Desvincular VBO
 	EBO1.Unbind(); // 3. desvincular EBO
 
-	GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
+	
 
 	//textura
-	Texture image("Bricks_001.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
-	float rotation = 0.0f;
-	double prevTime = glfwGetTime();
+	Texture image("Bricks_001.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE); //creamos un objeto de la clase texture y le pasamos la ruta de la imagen, el tipo de textura, el slot de textura, el formato y el tipo de pixel
+
+	glEnable(GL_DEPTH_TEST); //habilitamos el test de profundidad para que no se vea la parte trasera del triangulo
+
+	Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f)); //creamos un objeto de la clase camera y le pasamos la posicion de la camara
 
 
-	GLuint tex0uni = glGetUniformLocation(shaderProgram.ID, "tex0"); //obtenemos la ubicacion de la textura en el shader)
+
 	shaderProgram.Activate(); //activamos el shader)
 
-	glm::mat4 model = glm::mat4(1.0f); //creamos una matriz de 4x4 para la transformacion del modelo
-	glm::mat4 view = glm::mat4(1.0f);
-	glm::mat4 proj = glm::mat4(1.0f);
 
-	model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(0.0f, 1.0f, 0.0f)); //rotamos el modelo 55 grados en el eje x
-	view = glm::translate(view, glm::vec3(0.0f, -0.5f, -2.0f)); //movemos la camara hacia atras, realmente el mundo lo movemos hacia adelante
-	proj = glm::perspective(glm::radians(45.0f), (float)(width / (float)height), 0.1f, 100.0f); //creamos una matriz de proyeccion perspectiva con un angulo de 45 grados, un aspect ratio de width/height, un near plane de 0.1 y un far plane de 100 para recortar la escena
+	
 
-	int modelLoc = glGetUniformLocation(shaderProgram.ID, "model"); //obtenemos la ubicacion de la matriz de transformacion del modelo en el shader
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model)); //asignamos la matriz de transformacion del modelo al shader
+	
 
-	int viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
-	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-	int projLoc = glGetUniformLocation(shaderProgram.ID, "proj");
-	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
-
-	glUniform1i(tex0uni, 0); //asignamos la textura al shader
 
 	while (!glfwWindowShouldClose(window)) //ciclo para que no se cierre el codigo
 	{
-		glClearColor(0.02f, 0.10f, 0.30f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClearColor(0.02f, 0.10f, 0.30f, 1.0f); //asignamos un color de fondo a la ventana
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  //limpiamos el buffer de color y profundidad para que no se vea la parte trasera del triangulo
 		shaderProgram.Activate(); //usamos el programa de shader)
 
-		double crntTime = glfwGetTime();
-		if (crntTime - prevTime >= 1.0 / 60.0)
-		{
-			prevTime = crntTime;
-			rotation += 1.0f;
-			model = glm::rotate(glm::mat4(1.0f), glm::radians(rotation - 55.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		}
+		camera.Inputs(window); //funcion para mover la camara con las teclas WASD
+		
 
-		glUniform1f(uniID, 0.5f);
-		image.Bind();
+		camera.Matrix(45.0f, 0.1f, 100.0f, shaderProgram, "camMatrix"); //actualizamos la matriz de proyeccion y vista de la camara
+		image.Bind(); //asignamos la textura al shader
 		VAO1.Bind(); //asignamos el buffer de vertices)
 		glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0); //dibujamos el triangulo)
 		glfwSwapBuffers(window); //intercambiamos el buffer frontal con el trasero para ver el color designado

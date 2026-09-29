@@ -29,10 +29,10 @@ Texture::Texture(const char* image, GLenum texType, GLenum slot, GLenum format, 
 	glBindTexture(texType, ID);
 
 	// Definimos el filtro utilizado cuando la textura se reduce
-	glTexParameteri(texType, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(texType, GL_TEXTURE_MIN_FILTER, GL_REPEAT);
 
 	// Definimos el filtro utilizado cuando la textura aumenta
-	glTexParameteri(texType, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(texType, GL_TEXTURE_MAG_FILTER, GL_REPEAT);
 
 	// Indicamos que la textura se repita horizontalmente
 	glTexParameteri(texType, GL_TEXTURE_WRAP_S, GL_REPEAT);
