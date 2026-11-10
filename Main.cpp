@@ -30,21 +30,64 @@ int main()
 	GLfloat vertices[] = //usamos el float de open gl para designar la ubicacion de los vertices
 	{
 		//    posición              color                 UV
-			-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-			-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
-			 0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-			 0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
-			 0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	2.5f, 5.0f
+	-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f, 	 0.0f, 0.0f,      0.0f, -1.0f, 0.0f, // Bottom side
+	-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	 0.0f, 5.0f,      0.0f, -1.0f, 0.0f, // Bottom side
+	 0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	 5.0f, 5.0f,      0.0f, -1.0f, 0.0f, // Bottom side
+	 0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	 5.0f, 0.0f,      0.0f, -1.0f, 0.0f, // Bottom side
+
+	-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f, 	 0.0f, 0.0f,     -0.8f, 0.5f,  0.0f, // Left Side
+	-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	 5.0f, 0.0f,     -0.8f, 0.5f,  0.0f, // Left Side
+	 0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	 2.5f, 5.0f,     -0.8f, 0.5f,  0.0f, // Left Side
+
+	-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	 5.0f, 0.0f,      0.0f, 0.5f, -0.8f, // Non-facing side
+	 0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	 0.0f, 0.0f,      0.0f, 0.5f, -0.8f, // Non-facing side
+	 0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	 2.5f, 5.0f,      0.0f, 0.5f, -0.8f, // Non-facing side
+
+	 0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	 0.0f, 0.0f,      0.8f, 0.5f,  0.0f, // Right side
+	 0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	 5.0f, 0.0f,      0.8f, 0.5f,  0.0f, // Right side
+	 0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	 2.5f, 5.0f,      0.8f, 0.5f,  0.0f, // Right side
+
+	 0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	 5.0f, 0.0f,      0.0f, 0.5f,  0.8f, // Facing side
+	-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f, 	 0.0f, 0.0f,      0.0f, 0.5f,  0.8f, // Facing side
+	 0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	 2.5f, 5.0f,      0.0f, 0.5f,  0.8f  // Facing side
 	};
 
 	GLuint indices[] = //indices para dibujar el triangulo
 	{
-	0, 1, 2,
-	0, 2, 3,
-	0, 1, 4,
-	1, 2, 4,
-	2, 3, 4,
-	3, 0, 4
+	0, 1, 2, // Bottom side
+	0, 2, 3, // Bottom side
+	4, 6, 5, // Left side
+	7, 9, 8, // Non-facing side
+	10, 12, 11, // Right side
+	13, 15, 14 // Facing side
+	};
+
+	GLfloat lightVertices[] = //vertices para la luz
+	{
+		-0.1f, -0.1f,  0.1f,
+		-0.1f, -0.1f, -0.1f,
+		 0.1f, -0.1f, -0.1f,
+		 0.1f, -0.1f,  0.1f,
+		-0.1f,  0.1f,  0.1f,
+		-0.1f,  0.1f, -0.1f,
+		 0.1f,  0.1f, -0.1f,
+		 0.1f,  0.1f,  0.1f
+	};
+
+	GLuint lightIndices[] = //indices para dibujar la luz
+	{
+		0, 1, 2,
+		0, 2, 3,
+		0, 1, 5,
+		0, 4, 5,
+		1, 2, 6,
+		1, 5, 6,
+		2, 3, 7,
+		2, 6, 7,
+		3, 0, 4,
+		3, 4, 7,
+		4, 5, 6,
+		4, 6, 7
 	};
 
 	GLFWwindow* window = glfwCreateWindow(width, height, "Youtube", NULL, NULL); //especificaciones de la ventana (ancho, alto, título, pantalla completa )
@@ -70,15 +113,46 @@ int main()
 	VBO VBO1(vertices, sizeof(vertices)); //creamos un objeto de la clase VBO para almacenar los datos de los vertices
 	EBO EBO1(indices, sizeof(indices)); //creamos un objeto de la clase EBO para almacenar los datos de los indices
 
-	VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 8 * sizeof(float), (void*)0); //ubicamos los datos del VBO, definiendo posicion y color
-	VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 8 * sizeof(float), (void*)(3 * sizeof(float))); //asignamos el buffer de vertices al VAO
-	VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 8 * sizeof(float), (void*)(6 * sizeof(float))); //asignamos las coordenadas de textura al VAO
+	VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 11 * sizeof(float), (void*)0); //ubicamos los datos del VBO, definiendo posicion y color
+	VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 11 * sizeof(float), (void*)(3 * sizeof(float))); //asignamos el buffer de vertices al VAO
+	VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 11 * sizeof(float), (void*)(6 * sizeof(float))); //asignamos las coordenadas de textura al VAO
+	VAO1.LinkAttrib(VBO1, 3, 3, GL_FLOAT, 11 * sizeof(float), (void*)(8 * sizeof(float))); //asignamos las normales al VAO
 
 	VAO1.Unbind(); // 1. Desvincular el VAO primero para "cerrar" el estado
 	VBO1.Unbind(); // 2. Desvincular VBO
 	EBO1.Unbind(); // 3. desvincular EBO
 
-	
+	Shader lightShader("light.vert", "light.frag"); //creamos un objeto de la clase shader y le pasamos los archivos de shader de vertice y fragmento para la luz
+
+	VAO lightVAO; //creamos un objeto de la clase VAO para almacenar los datos de los vertices de la luz
+	lightVAO.Bind(); //asignamos el buffer de vertices de la luz
+
+	VBO lightVBO(lightVertices, sizeof(lightVertices)); //creamos un objeto de la clase VBO para almacenar los datos de los vertices de la luz
+	EBO lightEBO(lightIndices, sizeof(lightIndices)); //creamos un objeto de la
+
+	lightVAO.LinkAttrib(lightVBO, 0, 3, GL_FLOAT, 3 * sizeof(float), (void*)0); //ubicamos los datos del VBO de la luz, definiendo posicion
+
+	lightVAO.Unbind(); // 1. Desvincular el VAO primero para "cerrar" el estado
+	lightVBO.Unbind(); // 2. Desvincular VBO
+	lightEBO.Unbind(); // 3. desvincular EBO
+
+	glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f); //color de la luz
+
+	glm::vec3 lightPos = glm::vec3(0.8f, 0.4f, 0.0f); //posicion de la luz
+	glm::mat4 lightModel = glm::mat4(1.0f); //matriz de modelo de la luz
+	lightModel = glm::translate(lightModel, lightPos); //trasladamos la luz
+
+	glm::vec3 pyramidPos = glm::vec3(0.0f, 0.0f, 0.0f); //posicion de la piramide
+	glm::mat4 pyramidModel = glm::mat4(1.0f); //matriz de modelo de la piramide
+	pyramidModel = glm::translate(pyramidModel, pyramidPos); //trasladamos la
+
+	lightShader.Activate(); //activamos el shader de la luz
+	glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
+	glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, 1.0f); //asignamos el color de la luz al shader)
+	shaderProgram.Activate(); //activamos el shader de la piramide
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(pyramidModel));
+	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, 1.0f); //asignamos el color de la luz al shader)
+	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z); //asignamos la posicion de la luz al shader)
 
 	//textura
 	Texture image("Bricks_001.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE); //creamos un objeto de la clase texture y le pasamos la ruta de la imagen, el tipo de textura, el slot de textura, el formato y el tipo de pixel
@@ -92,9 +166,9 @@ int main()
 	shaderProgram.Activate(); //activamos el shader)
 
 
-	
+	glUniform3f(glGetUniformLocation(shaderProgram.ID, "camPos"), camera.Posicion.x, camera.Posicion.y, camera.Posicion.z); //asignamos la posicion de la camara al shader
 
-	
+
 
 
 
@@ -105,12 +179,21 @@ int main()
 		shaderProgram.Activate(); //usamos el programa de shader)
 
 		camera.Inputs(window); //funcion para mover la camara con las teclas WASD
-		
 
-		camera.Matrix(45.0f, 0.1f, 100.0f, shaderProgram, "camMatrix"); //actualizamos la matriz de proyeccion y vista de la camara
+
+		camera.updateMatrix(45.0f, 0.1f, 100.0f, shaderProgram, "camMatrix");
+		glUniform3f(glGetUniformLocation(shaderProgram.ID, "camPos"), camera.Posicion.x, camera.Posicion.y, camera.Posicion.z); //actualizamos la posicion de la camara en el shader cada frame
 		image.Bind(); //asignamos la textura al shader
 		VAO1.Bind(); //asignamos el buffer de vertices)
 		glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0); //dibujamos el triangulo)
+
+		lightShader.Activate(); //activamos el shader de la luz
+		camera.updateMatrix(45.0f, 0.1f, 100.0f, lightShader, "camMatrix");
+		lightVAO.Bind(); //asignamos el buffer de vertices de la luz
+		glDrawElements(GL_TRIANGLES, sizeof(lightIndices) / sizeof(int), GL_UNSIGNED_INT, 0); //dibujamos la luz)
+
+
+
 		glfwSwapBuffers(window); //intercambiamos el buffer frontal con el trasero para ver el color designado
 		glfwPollEvents(); //funcion para que la ventana no se cierre y pueda recibir eventos
 

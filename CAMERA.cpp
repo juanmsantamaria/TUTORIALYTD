@@ -7,12 +7,14 @@ Camera::Camera(int width, int height, glm::vec3 startPosition)
 	Posicion = startPosition; // antes: posicion = posicion (se asignaba a sí misma)
 }
 
-void Camera::Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader, const char* uniform) // actualiza la matriz de proyección y vista de la cámara
+void Camera::updateMatrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader, const char* uniform) // actualiza la matriz de proyección y vista de la cámara
 {
 	glm::mat4 cameraVista = glm::lookAt(Posicion, Posicion + orientacion, arriba); // crea la matriz de vista de la cámara usando la posición, orientación y vector hacia arriba
 	glm::mat4 cameraProjection = glm::perspective(glm::radians(FOVdeg), (float)width / (float)height, nearPlane, farPlane); // crea la matriz de proyección de la cámara usando el campo de visión, la relación de aspecto y los planos cercano y lejano
 
-	glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(cameraProjection * cameraVista)); // envía la matriz de proyección y vista combinada al shader
+	cameraMatrix = cameraProjection * cameraVista; // combina las matrices de proyección y vista
+
+	glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(cameraMatrix)); // envía la matriz de proyección y vista combinada al shader
 }
 
 void Camera::Inputs(GLFWwindow* window)
@@ -25,9 +27,9 @@ void Camera::Inputs(GLFWwindow* window)
 	{
 		Posicion += speed * -glm::normalize(glm::cross(orientacion, arriba)); // cruzamos la orientación con el vector hacia arriba para obtener el vector lateral
 	}
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) 
 	{
-		Posicion += speed * -orientacion;
+		Posicion += speed * -orientacion; // si se presiona la tecla S, la cámara se mueve hacia atrás
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
