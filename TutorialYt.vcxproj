@@ -180,6 +180,8 @@
   <ItemGroup>
     <Image Include="..\..\..\Downloads\Bricks_001.png" />
     <Image Include="..\..\..\Downloads\minecraft-png-icon-16704.png" />
+    <Image Include="wood2_COLOR.jpg" />
+    <Image Include="wood2_SPEC.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

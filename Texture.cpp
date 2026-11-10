@@ -3,7 +3,7 @@
 
 // Constructor de la clase Texture
 // Recibe la imagen, el tipo de textura, el slot, el formato y el tipo de píxel
-Texture::Texture(const char* image, GLenum texType, GLenum slot, GLenum format, GLenum pixelType)
+Texture::Texture(const char* image, GLenum texType, GLuint slot, GLenum format, GLenum pixelType)
 {
 	// Guardamos el tipo de textura
 	type = texType;
@@ -23,7 +23,8 @@ Texture::Texture(const char* image, GLenum texType, GLenum slot, GLenum format, 
 	glGenTextures(1, &ID);
 
 	// Activamos el slot de textura indicado
-	glActiveTexture(slot);
+	glActiveTexture(GL_TEXTURE0 + slot);
+	unit = slot;
 
 	// Vinculamos la textura para poder configurarla
 	glBindTexture(texType, ID);
@@ -54,10 +55,21 @@ Texture::Texture(const char* image, GLenum texType, GLenum slot, GLenum format, 
 	glBindTexture(texType, 0);
 }
 
+void Texture::texUnit(Shader& shader, const char* uniform, GLuint unit)
+{
+	// Gets the location of the uniform
+	GLuint texUni = glGetUniformLocation(shader.ID, uniform);
+	// Shader needs to be activated before changing the value of a uniform
+	shader.Activate();
+	// Sets the value of the uniform
+	glUniform1i(texUni, unit);
+}
+
 
 // Vincula la textura para poder utilizarla
 void Texture::Bind()
 {
+	glActiveTexture(GL_TEXTURE0 + unit);
 	glBindTexture(type, ID);
 }
 
