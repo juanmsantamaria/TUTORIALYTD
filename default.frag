@@ -2,14 +2,19 @@
 
 out vec4 FragColor; // Variable que contiene el color final del fragmento
 
-in vec3 color; // Recibimos el color enviado desde el vertex shader
-in vec2 texCoord; // Recibimos las coordenadas de textura enviadas desde el vertex shader
-in vec3 normal; // Recibimos la normal enviada desde el vertex shader
 in vec3 crntPos; // Recibimos la posición actual enviada desde el vertex shader
 
-uniform sampler2D tex0; // Declaramos la textura que vamos a utilizar
+in vec3 normal; // Recibimos la normal enviada desde el vertex shader
 
-uniform sampler2D tex1; // Declaramos la textura que vamos a utilizar
+in vec3 color; // Recibimos el color enviado desde el vertex shader
+
+in vec2 texCoord; // Recibimos las coordenadas de textura enviadas desde el vertex shader
+
+
+
+uniform sampler2D diffuse0; // Declaramos la textura que vamos a utilizar
+
+uniform sampler2D specular0; // Declaramos la textura que vamos a utilizar
 
 uniform vec4 lightColor; // Declaramos el color de la luz que vamos a utilizar
 uniform vec3 lightPos; // Declaramos la posición de la luz (main.cpp la envía con glUniform4f)
@@ -32,5 +37,5 @@ void main()
 
 
 	// Asignamos el color recibido al fragmento
-	FragColor = (texture(tex0, texCoord) * (ambient + diffuse) + texture(tex1, texCoord).r * specular) * lightColor;
+	FragColor = (texture(diffuse0, texCoord) * (ambient + diffuse) + texture(specular0, texCoord).r * specular) * lightColor;
 }

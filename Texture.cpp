@@ -3,7 +3,7 @@
 
 // Constructor de la clase Texture
 // Recibe la imagen, el tipo de textura, el slot, el formato y el tipo de píxel
-Texture::Texture(const char* image, GLenum texType, GLuint slot, GLenum format, GLenum pixelType)
+Texture::Texture(const char* image, const char* texType, GLuint slot, GLenum format, GLenum pixelType)
 {
 	// Guardamos el tipo de textura
 	type = texType;
@@ -27,32 +27,32 @@ Texture::Texture(const char* image, GLenum texType, GLuint slot, GLenum format, 
 	unit = slot;
 
 	// Vinculamos la textura para poder configurarla
-	glBindTexture(texType, ID);
+	glBindTexture(GL_TEXTURE_2D, ID);
 
 	// Definimos el filtro utilizado cuando la textura se reduce
-	glTexParameteri(texType, GL_TEXTURE_MIN_FILTER, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
 	// Definimos el filtro utilizado cuando la textura aumenta
-	glTexParameteri(texType, GL_TEXTURE_MAG_FILTER, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	// Indicamos que la textura se repita horizontalmente
-	glTexParameteri(texType, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 
 	// Indicamos que la textura se repita verticalmente
-	glTexParameteri(texType, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	// Enviamos los datos de la imagen a OpenGL
 	// GL_RGBA indica que la textura utiliza cuatro canales de color
-	glTexImage2D(texType, 0, GL_RGBA, widthImg, heightImg, 0, GL_RGBA, pixelType, bytes);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, widthImg, heightImg, 0, GL_RGBA, pixelType, bytes);
 
 	// Generamos los mipmaps de la textura
-	glGenerateMipmap(texType);
+	glGenerateMipmap(GL_TEXTURE_2D);
 
 	// Liberamos la memoria utilizada por la imagen
 	stbi_image_free(bytes);
 
 	// Desvinculamos la textura
-	glBindTexture(texType, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Texture::texUnit(Shader& shader, const char* uniform, GLuint unit)
@@ -70,14 +70,14 @@ void Texture::texUnit(Shader& shader, const char* uniform, GLuint unit)
 void Texture::Bind()
 {
 	glActiveTexture(GL_TEXTURE0 + unit);
-	glBindTexture(type, ID);
+	glBindTexture(GL_TEXTURE_2D, ID);
 }
 
 
 // Desvincula la textura
 void Texture::Unbind()
 {
-	glBindTexture(type, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 
