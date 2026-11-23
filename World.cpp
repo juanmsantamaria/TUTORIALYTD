@@ -1,6 +1,7 @@
 #include"World.h"
 #include<cstring>
 #include<cfloat>
+#include<cstdlib>
 
 // una cara del cubo: direccion del vecino, normal y las 4 esquinas (en sentido antihorario visto desde afuera)
 struct Face
@@ -37,7 +38,13 @@ static const glm::vec2 UVS[4] =
 
 // color con el que se tiñe la textura de cada tipo de bloque (provisional, hasta tener un atlas)
 static glm::vec3 BlockColor(uint8_t type)
+
+
 {
+
+
+
+
 	switch (type)
 	{
 	case GRASS:  return glm::vec3(0.55f, 0.90f, 0.35f);
@@ -184,4 +191,117 @@ bool World::Raycast(glm::vec3 origin, glm::vec3 direction, float maxDistance, gl
 	}
 
 	return false;
+}
+
+// true si (x, z) cae dentro del area de una casa (mas un margen)
+static bool InsideArea(int x, int z, int ox, int oz, int margin)
+{
+	return x >= ox - margin && x < ox + World::HOUSE_W + margin &&
+		z >= oz - margin && z < oz + World::HOUSE_D + margin;
+}
+
+void World::PlaceHouse(int ox, int oy, int oz)
+{
+	const int W = HOUSE_W;
+	const int D = HOUSE_D;
+
+	// piso de tablas
+	for (int x = 0; x < W; x++)
+		for (int z = 0; z < D; z++)
+			SetBlock(ox + x, oy, oz + z, PLANKS);
+
+	// paredes de 4 bloques de alto: esquinas de madera y el resto de tablas
+	for (int y = 1; y <= 4; y++)
+	{
+		for (int x = 0; x < W; x++)
+		{
+			for (int z = 0; z < D; z++)
+			{
+				bool edge = (x == 0 || x == W - 1 || z == 0 || z == D - 1);
+				if (!edge) continue;
+				bool corner = (x == 0 || x == W - 1) && (z == 0 || z == D - 1);
+				SetBlock(ox + x, oy + y, oz + z, corner ? WOOD : PLANKS);
+			}
+		}
+	}
+
+	// puerta en el centro de la pared del frente (+Z), de 2 bloques de alto
+	SetBlock(ox + W / 2, oy + 1, oz + D - 1, AIR);
+	SetBlock(ox + W / 2, oy + 2, oz + D - 1, AIR);
+
+	// ventanas
+	SetBlock(ox + 1, oy + 2, oz + D - 1, AIR);     // frente, izquierda
+	SetBlock(ox + W - 2, oy + 2, oz + D - 1, AIR); // frente, derecha
+	SetBlock(ox, oy + 2, oz + D / 2, AIR);         // lado izquierdo
+	SetBlock(ox + W - 1, oy + 2, oz + D / 2, AIR); // lado derecho
+	SetBlock(ox + W / 2, oy + 2, oz, AIR);         // pared de atras
+
+	// techo escalonado de piedra: 7x7, 5x5, 3x3 y 1x1
+	for (int layer = 0; layer < 4; layer++)
+		for (int x = layer; x < W - layer; x++)
+			for (int z = layer; z < D - layer; z++)
+				SetBlock(ox + x, oy + 5 + layer, oz + z, STONE);
+}
+
+void World::MarkPlot(int ox, int oz)
+{
+	// marco de piedra en el suelo, justo afuera del area de 7 x 7
+	for (int x = -1; x <= HOUSE_W; x++)
+		for (int z = -1; z <= HOUSE_D; z++)
+			if (x == -1 || x == HOUSE_W || z == -1 || z == HOUSE_D)
+				SetBlock(ox + x, SURFACE_Y, oz + z, STONE);
+}
+
+void World::PlaceTree(int x, int z)
+{
+	int base = SURFACE_Y + 1;     // primer bloque sobre el pasto
+	int top = base + 3;           // tronco de 4 bloques
+
+	// hojas: dos capas de 5x5 (sin esquinas), una de 3x3 y una cruz arriba
+	for (int dy = -1; dy <= 2; dy++)
+	{
+		int r = (dy <= 0) ? 2 : 1;
+		for (int dx = -r; dx <= r; dx++)
+		{
+			for (int dz = -r; dz <= r; dz++)
+			{
+				bool corner = (std::abs(dx) == r && std::abs(dz) == r);
+				if (corner && (dy <= 0 || dy == 2)) continue;
+				if (GetBlock(x + dx, top + dy, z + dz) == AIR)
+					SetBlock(x + dx, top + dy, z + dz, LEAVES);
+			}
+		}
+	}
+
+	// tronco
+	for (int y = base; y <= top; y++)
+		SetBlock(x, y, z, WOOD);
+}
+
+void World::PlaceTrees(int count, unsigned int seed)
+{
+	unsigned int state = seed;
+	std::vector<glm::ivec2> placed;
+
+	for (int attempt = 0; attempt < 500 && (int)placed.size() < count; attempt++)
+	{
+		// generador de numeros pseudoaleatorios sencillo (misma semilla = mismo resultado)
+		state = state * 1664525u + 1013904223u;
+		int x = 3 + (int)((state >> 16) % (unsigned int)(SIZE_X - 6));
+		state = state * 1664525u + 1013904223u;
+		int z = 3 + (int)((state >> 16) % (unsigned int)(SIZE_Z - 6));
+
+		// no plantamos sobre la casa ni sobre la parcela
+		if (InsideArea(x, z, HOUSE_X, HOUSE_Z, 3)) continue;
+		if (InsideArea(x, z, PLOT_X, PLOT_Z, 3)) continue;
+
+		// ni demasiado cerca de otro arbol
+		bool tooClose = false;
+		for (const glm::ivec2& p : placed)
+			if (std::abs(x - p.x) + std::abs(z - p.y) < 5) tooClose = true;
+		if (tooClose) continue;
+
+		PlaceTree(x, z);
+		placed.push_back(glm::ivec2(x, z));
+	}
 }

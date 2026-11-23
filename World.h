@@ -22,14 +22,37 @@ class World
 {
 public:
 	// tamaño del mundo en bloques (cada bloque mide 1 x 1 x 1)
-	static const int SIZE_X = 32;
+	static const int SIZE_X = 64;
 	static const int SIZE_Y = 16;
-	static const int SIZE_Z = 32;
+	static const int SIZE_Z = 64;
+
+	// altura de la capa de pasto (el suelo)
+	static const int SURFACE_Y = 3;
+
+	// tamaño de la casa (en bloques) y zonas reservadas del mapa
+	static const int HOUSE_W = 7;  // ancho de la casa (eje X)
+	static const int HOUSE_D = 7;  // fondo de la casa (eje Z)
+	static const int HOUSE_X = 4;  // esquina de la casa de muestra
+	static const int HOUSE_Z = 4;
+	static const int PLOT_X = 21;  // esquina de la parcela vacia donde se construye la copia
+	static const int PLOT_Z = 4;
 
 	World();
 
 	// genera un terreno plano: piedra, dos capas de tierra y pasto arriba
 	void GenerateFlat();
+
+	// construye una casa de 7 x 7 con su esquina en (ox, oy, oz); oy es la altura del piso
+	void PlaceHouse(int ox, int oy, int oz);
+
+	// marca con un marco de piedra el terreno donde se construye la copia de la casa
+	void MarkPlot(int ox, int oz);
+
+	// planta un arbol en (x, z), sobre el pasto
+	void PlaceTree(int x, int z);
+
+	// planta varios arboles en posiciones pseudoaleatorias (la misma semilla da siempre el mismo bosque)
+	void PlaceTrees(int count, unsigned int seed);
 
 	// devuelve el tipo de bloque (AIR si la posicion esta fuera del mundo)
 	uint8_t GetBlock(int x, int y, int z) const;
