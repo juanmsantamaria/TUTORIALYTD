@@ -7,6 +7,7 @@
 #include<filesystem>
 namespace fs = std::filesystem;
 #include"Mesh.h"
+#include"World.h"
 
 
 
@@ -21,21 +22,6 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); //decimos que version de open gl usamos
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); //version menor
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //introducimos profile, un paquete de funciones. perfil core para usar funciones modernas.
-
-	Vertex vertices[] = //usamos el float de open gl para designar la ubicacion de los vertices
-
-	{ //               COORDINATES           /            COLORS          /           NORMALS         /       TEXTURE COORDINATES    //
-	Vertex{glm::vec3(-1.0f, 0.0f,  1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)},
-	Vertex{glm::vec3(-1.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f)},
-	Vertex{glm::vec3(1.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)},
-	Vertex{glm::vec3(1.0f, 0.0f,  1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)}
-	};
-
-	GLuint indices[] = //indices para dibujar el triangulo
-	{
-	0, 1, 2,
-	0, 2, 3
-	};
 
 	Vertex lightVertices[] = //vertices para la luz
 	{
@@ -91,10 +77,14 @@ int main()
 	};
 
 	Shader shaderProgram("default.vert", "default.frag"); //creamos un objeto de la clase shader y le pasamos los archivos de shader de vertice y fragmento
-	std::vector <Vertex> verts(vertices, vertices + sizeof(vertices) / sizeof(Vertex)); //creamos un vector de vertices y le pasamos los vertices)
-	std::vector <GLuint> ind(indices, indices + sizeof(indices) / sizeof(GLuint)); //creamos un vector de indices y le pasamos los indices)
 	std::vector <Texture> tex(textures, textures + sizeof(textures) / sizeof(Texture)); //creamos un vector de texturas y le pasamos las texturas)
-	Mesh floor(verts, ind, tex); //creamos un objeto de la clase mesh y le pasamos los vertices, indices y texturas)
+
+	World world; //creamos el mundo de bloques
+	world.GenerateFlat(); //generamos el terreno plano
+	std::vector <Vertex> worldVerts; //vector de vertices del mundo
+	std::vector <GLuint> worldInd; //vector de indices del mundo
+	world.BuildMesh(worldVerts, worldInd); //generamos la malla del mundo (solo las caras visibles)
+	Mesh worldMesh(worldVerts, worldInd, tex); //creamos un objeto de la clase mesh con la malla del mundo)
 
 
 	Shader lightShader("light.vert", "light.frag"); //creamos un objeto de la clase shader y le pasamos los archivos de shader de vertice y fragmento para la luz
@@ -105,18 +95,18 @@ int main()
 
 	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f); //color de la luz
 
-	glm::vec3 lightPos = glm::vec3(0.8f, 0.4f, 0.0f); //posicion de la luz
+	glm::vec3 lightPos = glm::vec3(16.0f, 20.0f, 16.0f); //posicion de la luz (encima del centro del mundo)
 	glm::mat4 lightModel = glm::mat4(1.0f); //matriz de modelo de la luz
 	lightModel = glm::translate(lightModel, lightPos); //trasladamos la luz
 
-	glm::vec3 pyramidPos = glm::vec3(0.0f, 0.0f, 0.0f); //posicion de la piramide
-	glm::mat4 pyramidModel = glm::mat4(1.0f); //matriz de modelo de la piramide
-	pyramidModel = glm::translate(pyramidModel, pyramidPos); //trasladamos la
+	glm::vec3 pyramidPos = glm::vec3(0.0f, 0.0f, 0.0f); //posicion del mundo
+	glm::mat4 pyramidModel = glm::mat4(1.0f); //matriz de modelo del mundo
+	pyramidModel = glm::translate(pyramidModel, pyramidPos); //trasladamos el mundo
 
 	lightShader.Activate(); //activamos el shader de la luz
 	glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
 	glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, 1.0f); //asignamos el color de la luz al shader)
-	shaderProgram.Activate(); //activamos el shader de la piramide
+	shaderProgram.Activate(); //activamos el shader del mundo
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(pyramidModel));
 	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, 1.0f); //asignamos el color de la luz al shader)
 	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z); //asignamos la posicion de la luz al shader)
@@ -126,7 +116,7 @@ int main()
 
 	glEnable(GL_DEPTH_TEST); //habilitamos el test de profundidad para que no se vea la parte trasera del triangulo
 
-	Camera camera(width, height, glm::vec3(0.0f, 0.5f, 2.0f)); //creamos un objeto de la clase camera y le pasamos la posicion de la camara
+	Camera camera(width, height, glm::vec3(16.0f, 6.0f, 40.0f)); //creamos un objeto de la clase camera y le pasamos la posicion de la camara (frente al mundo, un poco arriba del suelo)
 
 
 
@@ -136,6 +126,12 @@ int main()
 	glUniform3f(glGetUniformLocation(shaderProgram.ID, "camPos"), camera.Posicion.x, camera.Posicion.y, camera.Posicion.z); //asignamos la posicion de la camara al shader
 
 
+	// bloque que se coloca con el clic derecho (teclas 1 a 6 para cambiarlo)
+	const char* blockNames[] = { "Aire", "Pasto", "Tierra", "Piedra", "Madera", "Hojas", "Tablas" };
+	uint8_t selectedBlock = PLANKS;
+	bool leftWasPressed = false; //para que un clic haga una sola accion
+	bool rightWasPressed = false;
+	glfwSetWindowTitle(window, (std::string("Bloque: ") + blockNames[selectedBlock]).c_str());
 
 
 
@@ -147,13 +143,71 @@ int main()
 
 		camera.Inputs(window); //funcion para mover la camara con las teclas WASD
 
+		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) //ESC cierra el programa
+		{
+			glfwSetWindowShouldClose(window, true);
+		}
+
+		for (int k = 0; k < 6; k++) //teclas 1 a 6: elegimos el tipo de bloque
+		{
+			if (glfwGetKey(window, GLFW_KEY_1 + k) == GLFW_PRESS && selectedBlock != k + 1)
+			{
+				selectedBlock = (uint8_t)(k + 1);
+				glfwSetWindowTitle(window, (std::string("Bloque: ") + blockNames[selectedBlock]).c_str());
+			}
+		}
+
+		// construir y destruir: lanzamos un rayo desde la camara hacia donde mira
+		bool leftNow = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+		bool rightNow = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+		bool rebuild = false;
+
+		glm::ivec3 hit, prev;
+		if ((leftNow && !leftWasPressed) || (rightNow && !rightWasPressed)) //solo en el momento del clic
+		{
+			if (world.Raycast(camera.Posicion, camera.orientacion, 6.0f, hit, prev))
+			{
+				if (leftNow && !leftWasPressed && hit.y > 0) //clic izquierdo: destruir (la capa de abajo no se puede romper)
+				{
+					world.SetBlock(hit.x, hit.y, hit.z, AIR);
+					rebuild = true;
+				}
+				if (rightNow && !rightWasPressed) //clic derecho: colocar en la celda vacia anterior
+				{
+					glm::ivec3 camCell = glm::ivec3(glm::floor(camera.Posicion));
+					if (prev != camCell && world.GetBlock(prev.x, prev.y, prev.z) == AIR) //no colocamos un bloque dentro de la camara
+					{
+						world.SetBlock(prev.x, prev.y, prev.z, selectedBlock);
+						rebuild = true;
+					}
+				}
+			}
+		}
+		leftWasPressed = leftNow;
+		rightWasPressed = rightNow;
+
+		if (rebuild) //si cambio algun bloque, regeneramos la malla del mundo
+		{
+			world.BuildMesh(worldVerts, worldInd);
+			worldMesh.Update(worldVerts, worldInd);
+		}
+
 
 		camera.updateMatrix(45.0f, 0.1f, 100.0f, shaderProgram, "camMatrix");
 
-		floor.Draw(shaderProgram, camera); //dibujamos la piramide
+		worldMesh.Draw(shaderProgram, camera); //dibujamos el mundo
 		lightShader.Activate(); //activamos el shader de la luz
 		camera.updateMatrix(45.0f, 0.1f, 100.0f, lightShader, "camMatrix");
 		light.Draw(lightShader, camera); //dibujamos la luz
+
+		// mira en el centro de la pantalla (dos rectangulos blancos pequeños)
+		glEnable(GL_SCISSOR_TEST);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glScissor(width / 2 - 10, height / 2 - 1, 20, 2);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glScissor(width / 2 - 1, height / 2 - 10, 2, 20);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDisable(GL_SCISSOR_TEST);
 
 
 		glfwSwapBuffers(window); //intercambiamos el buffer frontal con el trasero para ver el color designado

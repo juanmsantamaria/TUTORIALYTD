@@ -163,6 +163,7 @@
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="VAO.cpp" />
     <ClCompile Include="VBO.cpp" />
+    <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="default.frag" />
@@ -178,6 +179,7 @@
     <ClInclude Include="Texture.h" />
     <ClInclude Include="VAO.h" />
     <ClInclude Include="VBO.h" />
+    <ClInclude Include="World.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\Bricks_001.png" />

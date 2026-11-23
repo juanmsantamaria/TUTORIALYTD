@@ -36,6 +36,6 @@ void main()
 
 
 
-	// Asignamos el color recibido al fragmento
-	FragColor = (texture(diffuse0, texCoord) * (ambient + diffuse) + texture(specular0, texCoord).r * specular) * lightColor;
+	// Asignamos el color recibido al fragmento (la textura se tiñe con el color del bloque)
+	FragColor = (texture(diffuse0, texCoord) * vec4(color, 1.0f) * (ambient + diffuse) + texture(specular0, texCoord).r * specular) * lightColor;
 }

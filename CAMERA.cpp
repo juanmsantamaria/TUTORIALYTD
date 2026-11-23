@@ -27,7 +27,7 @@ void Camera::Inputs(GLFWwindow* window)
 	{
 		Posicion += speed * -glm::normalize(glm::cross(orientacion, arriba)); // cruzamos la orientación con el vector hacia arriba para obtener el vector lateral
 	}
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) 
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
 		Posicion += speed * -orientacion; // si se presiona la tecla S, la cámara se mueve hacia atrás
 	}
@@ -38,7 +38,7 @@ void Camera::Inputs(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) // si se presiona la tecla espacio, la cámara se mueve hacia arriba
 	{
 		Posicion += speed * arriba;
-	} 
+	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)  // si se presiona la tecla control, la cámara se mueve hacia abajo
 	{
 		Posicion += speed * -arriba;
@@ -52,38 +52,30 @@ void Camera::Inputs(GLFWwindow* window)
 		speed = 0.02f;
 	}
 
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) // si se presiona el botón izquierdo del ratón, la cámara se mueve según el movimiento del ratón
+	// el ratón siempre rota la cámara (el cursor queda oculto y capturado), así los clics quedan libres para construir y destruir
+	if (firstClick)
 	{
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // ocultamos el cursor del ratón
-
-		if (firstClick)
-		{
-			glfwSetCursorPos(window, (width / 2), (height / 2)); // colocamos el cursor en el centro de la ventana
-			firstClick = false;
-		}
-		// obtenemos la posición del cursor del ratón
-		double mouseX; 
-		double mouseY;
-		glfwGetCursorPos(window, &mouseX, &mouseY);
-
-		float rotX = sensitivity * (float)(mouseY - (height / 2)) / height; // calculamos la rotación en el eje Y según el movimiento del ratón
-		float rotY = sensitivity * (float)(mouseX - (width / 2)) / width;
-
-		glm::vec3 newOrientacion = glm::rotate(orientacion, glm::radians(-rotX), glm::normalize(glm::cross(orientacion, arriba))); // rotamos la orientación de la cámara según el movimiento del ratón
-
-		// Evita que la cámara dé la vuelta completa (límite de 5° arriba/abajo)
-		if (!(glm::angle(newOrientacion, arriba) <= glm::radians(5.0f) || glm::angle(newOrientacion, -arriba) <= glm::radians(5.0f))) // si la nueva orientación no está demasiado cerca del vector hacia arriba o hacia abajo
-		{
-			orientacion = newOrientacion; // actualizamos la orientación de la cámara
-		}
-
-		orientacion = glm::rotate(orientacion, glm::radians(-rotY), arriba); // rotamos la orientación de la cámara según el movimiento del ratón
-
-		glfwSetCursorPos(window, (width / 2), (height / 2)); // colocamos el cursor en el centro de la ventana para que no se salga de la pantalla
-	} 
-	else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) // si se suelta el botón izquierdo del ratón, mostramos el cursor del ratón
-	{
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // mostramos el cursor del ratón
-		firstClick = true;
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // ocultamos y capturamos el cursor del ratón
+		glfwSetCursorPos(window, (width / 2), (height / 2)); // colocamos el cursor en el centro de la ventana
+		firstClick = false;
 	}
+	// obtenemos la posición del cursor del ratón
+	double mouseX;
+	double mouseY;
+	glfwGetCursorPos(window, &mouseX, &mouseY);
+
+	float rotX = sensitivity * (float)(mouseY - (height / 2)) / height; // calculamos la rotación en el eje Y según el movimiento del ratón
+	float rotY = sensitivity * (float)(mouseX - (width / 2)) / width;
+
+	glm::vec3 newOrientacion = glm::rotate(orientacion, glm::radians(-rotX), glm::normalize(glm::cross(orientacion, arriba))); // rotamos la orientación de la cámara según el movimiento del ratón
+
+	// Evita que la cámara dé la vuelta completa (límite de 5° arriba/abajo)
+	if (!(glm::angle(newOrientacion, arriba) <= glm::radians(5.0f) || glm::angle(newOrientacion, -arriba) <= glm::radians(5.0f))) // si la nueva orientación no está demasiado cerca del vector hacia arriba o hacia abajo
+	{
+		orientacion = newOrientacion; // actualizamos la orientación de la cámara
+	}
+
+	orientacion = glm::rotate(orientacion, glm::radians(-rotY), arriba); // rotamos la orientación de la cámara según el movimiento del ratón
+
+	glfwSetCursorPos(window, (width / 2), (height / 2)); // colocamos el cursor en el centro de la ventana para que no se salga de la pantalla
 }
