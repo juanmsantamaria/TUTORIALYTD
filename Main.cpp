@@ -44,8 +44,7 @@ int main()
 
 	const unsigned int width = mode->width;
 	const unsigned int height = mode->height;
-	//inicializamos GLFW y creamos una ventana de 800x800 píxeles con el título "Youtube"
-	glfwInit();
+	
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); //decimos que version de open gl usamos
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); //version menor
