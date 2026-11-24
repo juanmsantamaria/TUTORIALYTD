@@ -42,8 +42,8 @@ int main()
 	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
 	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 
-	const unsigned int width = mode->width;
-	const unsigned int height = mode->height;
+	const unsigned int width = mode->width; //ancho de la ventana
+	const unsigned int height = mode->height; //alto de la ventana
 	
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); //decimos que version de open gl usamos
@@ -240,6 +240,54 @@ int main()
 			std::cout << "Error al cargar el modelo" << std::endl;
 	}
 
+
+	//generamos la trayectoria del primer zorro
+	glm::vec3 curvaP0 = modelInfos[6].position;
+	glm::vec3 curvaP1 = curvaP0 + glm::vec3(5.0f, 0.0f, 2.0f);
+	glm::vec3 curvaP2 = curvaP0 + glm::vec3(-3.0f, 0.0f, 6.0f);
+	glm::vec3 curvaP3 = curvaP0;
+
+	std::vector<glm::vec3> puntosCurva;
+
+	//calculamos los puntos de la curva
+	for (int j = 0; j <= 100; j++)
+	{
+		float t = j / 100.0f;
+
+		glm::vec3 punto = Bezier(
+			curvaP0, curvaP1, curvaP2, curvaP3, t
+		);
+
+		punto.y += 0.05f;
+
+		puntosCurva.push_back(punto);
+	}
+
+	//creamos los buffers de la curva
+	GLuint curvaVAO, curvaVBO;
+
+	glGenVertexArrays(1, &curvaVAO);
+	glGenBuffers(1, &curvaVBO);
+
+	glBindVertexArray(curvaVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, curvaVBO);
+
+	glBufferData(
+		GL_ARRAY_BUFFER,
+		puntosCurva.size() * sizeof(glm::vec3),
+		puntosCurva.data(),
+		GL_STATIC_DRAW
+	);
+
+	glVertexAttribPointer(
+		0, 3, GL_FLOAT, GL_FALSE,
+		sizeof(glm::vec3), (void*)0
+	);
+
+	glEnableVertexAttribArray(0);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 
 
@@ -504,6 +552,50 @@ int main()
 			models[i].Draw(modelShader, villagerMatrix);
 		}
 
+		//dibujamos la curva de Bezier
+		lightShader.Activate();
+
+		camera.updateMatrix(
+			45.0f, 0.1f, 100.0f,
+			lightShader, "camMatrix"
+		);
+
+		//matriz identidad para la curva
+		glm::mat4 curvaModel = glm::mat4(1.0f);
+
+		glUniformMatrix4fv(
+			glGetUniformLocation(lightShader.ID, "model"),
+			1, GL_FALSE, glm::value_ptr(curvaModel)
+		);
+
+		//color amarillo de la curva
+		glUniform4f(
+			glGetUniformLocation(lightShader.ID, "lightColor"),
+			1.0f, 1.0f, 0.0f, 1.0f
+		);
+
+		//dibujamos los puntos conectados mediante lineas
+		glBindVertexArray(curvaVAO);
+
+		glDrawArrays(
+			GL_LINE_STRIP,
+			0,
+			(GLsizei)puntosCurva.size()
+		);
+
+		glBindVertexArray(0);
+
+		//restauramos las propiedades de la luz
+		glUniformMatrix4fv(
+			glGetUniformLocation(lightShader.ID, "model"),
+			1, GL_FALSE, glm::value_ptr(lightModel)
+		);
+
+		glUniform4f(
+			glGetUniformLocation(lightShader.ID, "lightColor"),
+			lightColor.x, lightColor.y, lightColor.z, 1.0f
+		);
+
 		// mira en el centro de la pantalla (dos rectangulos blancos pequeños)
 		glEnable(GL_SCISSOR_TEST);  //habilitamos el test de recorte para dibujar solo en una parte de la pantalla
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); //asignamos un color blanco para la mira
@@ -519,7 +611,9 @@ int main()
 
 	}
 
-
+	//liberamos los buffers de la curva
+	glDeleteVertexArrays(1, &curvaVAO);
+	glDeleteBuffers(1, &curvaVBO);
 
 	shaderProgram.Delete(); //eliminamos el shader program
 	lightShader.Delete(); //eliminamos el shader program de la luz
