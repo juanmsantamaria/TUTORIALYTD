@@ -335,7 +335,7 @@ resolución del monitor.
 
 ## Video explicativo
 
-/https://youtu.be/CZ5SEMcNQYo
+https://youtu.be/CZ5SEMcNQYo
 
 ## Conclusiones
 
