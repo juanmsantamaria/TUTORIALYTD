@@ -34,12 +34,10 @@ Texture::Texture(const char* image, const char* texType, GLuint slot, GLenum for
 
 	// Definimos el filtro utilizado cuando la textura aumenta
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	// Indicamos que la textura se repita horizontalmente
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-
-	// Indicamos que la textura se repita verticalmente
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// Definimos el comportamiento de la textura cuando se repite en las coordenadas S y T
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	// Definimos el comportamiento de la textura cuando se repite en las coordenadas S y T
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	// Enviamos los datos de la imagen a OpenGL
 	// GL_RGBA indica que la textura utiliza cuatro canales de color
@@ -69,20 +67,20 @@ void Texture::texUnit(Shader& shader, const char* uniform, GLuint unit)
 // Vincula la textura para poder utilizarla
 void Texture::Bind()
 {
-	glActiveTexture(GL_TEXTURE0 + unit);
-	glBindTexture(GL_TEXTURE_2D, ID);
+	glActiveTexture(GL_TEXTURE0 + unit); // Activamos el slot de textura correspondiente
+	glBindTexture(GL_TEXTURE_2D, ID); // Vinculamos la textura para poder utilizarla
 }
 
 
 // Desvincula la textura
 void Texture::Unbind()
 {
-	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindTexture(GL_TEXTURE_2D, 0); // Desvinculamos la textura
 }
 
 
 // Elimina la textura de la memoria de OpenGL
 void Texture::Delete()
-{
-	glDeleteTextures(1, &ID);
+{ 
+	glDeleteTextures(1, &ID); // Eliminamos la textura de la memoria de OpenGL
 }

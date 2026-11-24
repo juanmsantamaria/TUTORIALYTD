@@ -26,6 +26,9 @@ public:
 	static const int SIZE_Y = 16;
 	static const int SIZE_Z = 64;
 
+	static const int HOUSE2_X = 48; // esquina de la segunda casa (al lado de la parcela)
+	static const int HOUSE2_Z = 23;
+
 	// altura de la capa de pasto (el suelo)
 	static const int SURFACE_Y = 3;
 
@@ -34,8 +37,10 @@ public:
 	static const int HOUSE_D = 7;  // fondo de la casa (eje Z)
 	static const int HOUSE_X = 4;  // esquina de la casa de muestra
 	static const int HOUSE_Z = 4;
-	static const int PLOT_X = 21;  // esquina de la parcela vacia donde se construye la copia
-	static const int PLOT_Z = 4;
+	static const int PLOT_W = 25;  // ancho de la parcela (eje X)
+	static const int PLOT_D = 15;  // fondo de la parcela (eje Z)
+	static const int PLOT_X = 18;  // esquina de la parcela vacia donde se construye la copia
+	static const int PLOT_Z = 19;
 
 	World();
 

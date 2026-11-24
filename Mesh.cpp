@@ -36,19 +36,19 @@ void Mesh::Draw(Shader& shader, Camera& camera)
 	unsigned int numDiffuse = 0;
 	unsigned int numSpecular = 0;
 
-	for (unsigned int i = 0; i < textures.size(); i++)
+	for (unsigned int i = 0; i < textures.size(); i++) // iteramos sobre todas las texturas de la malla
 	{
 		std::string num;
-		std::string type = textures[i].type;
+		std::string type = textures[i].type; // obtenemos el tipo de textura (diffuse, specular, etc.)
 		if (type == "diffuse")
 		{
-			num = std::to_string(numDiffuse++);
+			num = std::to_string(numDiffuse++); // si es una textura difusa, incrementamos el contador de texturas difusas
 		}
-		else if (type == "specular")
+		else if (type == "specular") // si es una textura especular, incrementamos el contador de texturas especulares
 		{
-			num = std::to_string(numSpecular++);
+			num = std::to_string(numSpecular++); // si es una textura especular, incrementamos el contador de texturas especulares
 		}
-		textures[i].texUnit(shader, (type + num).c_str(), i);
+		textures[i].texUnit(shader, (type + num).c_str(), i); // asignamos la unidad de textura al shader
 		textures[i].Bind();
 	}
 	// Take care of the camera Matrix
@@ -60,7 +60,7 @@ void Mesh::Draw(Shader& shader, Camera& camera)
 }
 
 
-void Mesh::Update(std::vector <Vertex>& newVertices, std::vector <GLuint>& newIndices)
+void Mesh::Update(std::vector <Vertex>& newVertices, std::vector <GLuint>& newIndices) // reemplaza los vertices e indices de la malla (se usa al construir o destruir bloques)
 {
 	vertices = newVertices;
 	indices = newIndices;
@@ -69,11 +69,11 @@ void Mesh::Update(std::vector <Vertex>& newVertices, std::vector <GLuint>& newIn
 	VAO.Bind();
 
 	glBindBuffer(GL_ARRAY_BUFFER, vboID);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW); // actualizamos los vertices
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboID);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboID); // con el VAO vinculado, el EBO queda asociado a el
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_DYNAMIC_DRAW); // actualizamos los indices
 
 	VAO.Unbind();
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0); // desvinculamos el VBO
 }

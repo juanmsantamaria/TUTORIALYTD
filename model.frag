@@ -18,13 +18,13 @@ void main()
 	if (texColor.a < alphaCutoff)
 		discard; // pixel transparente
 
-	vec3 n = normalize(normal);
+	vec3 n = normalize(normal); // normalizamos la normal
 	if (!gl_FrontFacing)
 		n = -n; // si vemos la cara de atrás de una pieza plana, invertimos la normal
 
 	float ambient = 0.3f;
-	vec3 lightDir = normalize(lightPos - crntPos);
-	float diffuse = max(dot(n, lightDir), 0.0f);
+	vec3 lightDir = normalize(lightPos - crntPos); // dirección de la luz
+	float diffuse = max(dot(n, lightDir), 0.0f); // intensidad de la luz difusa
 
 	FragColor = vec4(texColor.rgb * (ambient + diffuse), 1.0f) * lightColor;
 }

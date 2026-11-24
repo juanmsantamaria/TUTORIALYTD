@@ -7,7 +7,7 @@
 struct Face
 {
 	int dx, dy, dz;
-	glm::vec3 normal;
+	glm::vec3 normal; //normal de la cara
 	glm::vec3 corners[4];
 };
 
@@ -30,64 +30,87 @@ static const Face FACES[6] =
 // coordenadas de textura de las 4 esquinas de cada cara
 static const glm::vec2 UVS[4] =
 {
-	glm::vec2(0.0f, 0.0f),
-	glm::vec2(1.0f, 0.0f),
-	glm::vec2(1.0f, 1.0f),
-	glm::vec2(0.0f, 1.0f)
+	glm::vec2(0.0f, 0.0f), // esquina inferior izquierda
+	glm::vec2(1.0f, 0.0f), // esquina inferior derecha
+	glm::vec2(1.0f, 1.0f), // esquina superior derecha
+	glm::vec2(0.0f, 1.0f) // esquina superior izquierda
 };
 
 // color con el que se tiñe la textura de cada tipo de bloque (provisional, hasta tener un atlas)
-static glm::vec3 BlockColor(uint8_t type)
-
-
+//seleccionamos la textura dependiendo del bloque y de la cara
+static int BlockTexture(uint8_t type, int face)
 {
-
-
-
-
-	switch (type)
+	switch (type) //seleccionamos la textura dependiendo del bloque y de la cara
 	{
-	case GRASS:  return glm::vec3(0.55f, 0.90f, 0.35f);
-	case DIRT:   return glm::vec3(0.85f, 0.60f, 0.40f);
-	case STONE:  return glm::vec3(0.70f, 0.70f, 0.72f);
-	case WOOD:   return glm::vec3(0.60f, 0.42f, 0.25f);
-	case LEAVES: return glm::vec3(0.25f, 0.75f, 0.25f);
-	case PLANKS: return glm::vec3(1.00f, 0.85f, 0.55f);
-	default:     return glm::vec3(1.0f, 1.0f, 1.0f);
+	case STONE: //textura de piedra
+		return 0;
+
+	case DIRT: //textura de tierra
+		return 1;
+
+	case GRASS: //textura de pasto
+		if (face == 0) return 2; //cara de arriba: pasto
+		if (face == 1) return 1; //cara de abajo: tierra
+		return 3;
+
+	case LEAVES: //textura de hojas
+		return 4;
+
+	case WOOD: //textura de madera
+		if (face == 0 || face == 1) return 6; //caras de arriba y abajo: corteza
+		return 5;
+
+	case PLANKS:
+		return 7;
+
+	default:
+		return 0;
 	}
 }
 
-World::World()
+//calculamos las coordenadas UV dentro del atlas
+static glm::vec2 AtlasUV(int texture, glm::vec2 uv)
 {
-	std::memset(blocks, AIR, sizeof(blocks));
+	float column = (float)(texture % 4); //columna de la textura en el atlas
+	float row = (float)(texture / 4); //fila de la textura en el atlas
+
+	float u = (column * 1024.0f + 0.5f + uv.x * 1023.0f) / 4096.0f; //calculamos las coordenadas UV dentro del atlas de texturas
+	float v = ((1.0f - row) * 1024.0f + 0.5f + uv.y * 1023.0f) / 2048.0f; //calculamos las coordenadas UV dentro del atlas de texturas
+
+	return glm::vec2(u, v); //calculamos las coordenadas UV dentro del atlas de texturas
 }
 
-void World::GenerateFlat()
+World::World()  // constructor de la clase World
 {
-	for (int x = 0; x < SIZE_X; x++)
+	std::memset(blocks, AIR, sizeof(blocks)); //inicializamos todos los bloques a AIR
+}
+
+void World::GenerateFlat() // generamos un terreno plano: piedra, dos capas de tierra y pasto arriba
+{
+	for (int x = 0; x < SIZE_X; x++) // recorremos todas las filas del mundo
 	{
-		for (int z = 0; z < SIZE_Z; z++)
+		for (int z = 0; z < SIZE_Z; z++) // recorremos todas las columnas del mundo
 		{
-			blocks[x][0][z] = STONE;
-			blocks[x][1][z] = DIRT;
-			blocks[x][2][z] = DIRT;
-			blocks[x][3][z] = GRASS;
+			blocks[x][0][z] = STONE; // capa de piedra
+			blocks[x][1][z] = DIRT; // capa de tierra
+			blocks[x][2][z] = DIRT; // capa de tierra
+			blocks[x][3][z] = GRASS; // capa de pasto
 		}
 	}
 }
 
 uint8_t World::GetBlock(int x, int y, int z) const
 {
-	if (x < 0 || x >= SIZE_X || y < 0 || y >= SIZE_Y || z < 0 || z >= SIZE_Z)
+	if (x < 0 || x >= SIZE_X || y < 0 || y >= SIZE_Y || z < 0 || z >= SIZE_Z) // si la posicion esta fuera del mundo, devolvemos AIR
 		return AIR;
-	return blocks[x][y][z];
+	return blocks[x][y][z]; // devolvemos el tipo de bloque en la posicion (x, y, z)
 }
 
-void World::SetBlock(int x, int y, int z, uint8_t type)
+void World::SetBlock(int x, int y, int z, uint8_t type) // cambiamos un bloque (no hace nada si la posicion esta fuera del mundo)
 {
-	if (x < 0 || x >= SIZE_X || y < 0 || y >= SIZE_Y || z < 0 || z >= SIZE_Z)
+	if (x < 0 || x >= SIZE_X || y < 0 || y >= SIZE_Y || z < 0 || z >= SIZE_Z) // no hacemos nada si la posicion esta fuera del mundo
 		return;
-	blocks[x][y][z] = type;
+	blocks[x][y][z] = type; // cambiamos el tipo de bloque en la posicion (x, y, z)
 }
 
 bool World::IsOpaque(int x, int y, int z) const
@@ -96,43 +119,51 @@ bool World::IsOpaque(int x, int y, int z) const
 	return GetBlock(x, y, z) != AIR;
 }
 
-void World::BuildMesh(std::vector<Vertex>& vertices, std::vector<GLuint>& indices) const
+void World::BuildMesh(std::vector<Vertex>& vertices, std::vector<GLuint>& indices) const //generamos la malla del mundo, solo con las caras visibles
 {
-	vertices.clear();
+	vertices.clear(); //limpiamos el vector de vertices
 	indices.clear();
 
-	for (int x = 0; x < SIZE_X; x++)
+	for (int x = 0; x < SIZE_X; x++) // recorremos todas las columnas del mundo
 	{
-		for (int y = 0; y < SIZE_Y; y++)
+		for (int y = 0; y < SIZE_Y; y++) // recorremos todas las capas del mundo
 		{
-			for (int z = 0; z < SIZE_Z; z++)
+			for (int z = 0; z < SIZE_Z; z++) // recorremos todos los bloques del mundo
 			{
-				uint8_t type = blocks[x][y][z];
+				uint8_t type = blocks[x][y][z]; //	tipo de bloque en la posicion (x, y, z)
 				if (type == AIR) continue;
 
-				glm::vec3 color = BlockColor(type);
+				glm::vec3 color(1.0f, 1.0f, 1.0f); //color con el que se tiñe la textura de cada tipo de bloque (provisional, hasta tener un atlas)
 
-				for (int f = 0; f < 6; f++)
+				//conservamos el color original de las tablas
+				if (type == PLANKS)
+					color = glm::vec3(1.00f, 0.85f, 0.55f);
+
+				for (int f = 0; f < 6; f++) // seis caras del cubo
 				{
-					const Face& face = FACES[f];
+					const Face& face = FACES[f]; // cara del cubo
 
 					// si el vecino tapa esta cara, no la dibujamos
-					if (IsOpaque(x + face.dx, y + face.dy, z + face.dz)) continue;
+					if (IsOpaque(x + face.dx, y + face.dy, z + face.dz)) continue; 
 
-					GLuint base = (GLuint)vertices.size();
+					GLuint base = (GLuint)vertices.size(); // indice del primer vertice de la cara
 
-					for (int c = 0; c < 4; c++)
+					for (int c = 0; c < 4; c++) // cuatro esquinas de la cara
 					{
 						glm::vec3 pos = glm::vec3((float)x, (float)y, (float)z) + face.corners[c];
-						vertices.push_back(Vertex{ pos, face.normal, color, UVS[c] });
+						//seleccionamos la textura correspondiente a la cara
+						int texture = BlockTexture(type, f); //calculamos la textura dependiendo del bloque y de la cara
+						glm::vec2 uv = AtlasUV(texture, UVS[c]); //calculamos las coordenadas UV dentro del atlas
+
+						vertices.push_back(Vertex{ pos, face.normal, color, uv });
 					}
 
-					indices.push_back(base);
-					indices.push_back(base + 1);
-					indices.push_back(base + 2);
-					indices.push_back(base);
-					indices.push_back(base + 2);
-					indices.push_back(base + 3);
+					indices.push_back(base); // dos triangulos por cara
+					indices.push_back(base + 1); // dos triangulos por cara
+					indices.push_back(base + 2); // dos triangulos por cara
+					indices.push_back(base); // dos triangulos por cara
+					indices.push_back(base + 2); // dos triangulos por cara
+					indices.push_back(base + 3); // dos triangulos por cara
 				}
 			}
 		}
@@ -193,11 +224,11 @@ bool World::Raycast(glm::vec3 origin, glm::vec3 direction, float maxDistance, gl
 	return false;
 }
 
-// true si (x, z) cae dentro del area de una casa (mas un margen)
-static bool InsideArea(int x, int z, int ox, int oz, int margin)
+// true si (x, z) cae dentro de un area rectangular (mas un margen)
+static bool InsideArea(int x, int z, int ox, int oz, int w, int d, int margin)
 {
-	return x >= ox - margin && x < ox + World::HOUSE_W + margin &&
-		z >= oz - margin && z < oz + World::HOUSE_D + margin;
+	return x >= ox - margin && x < ox + w + margin &&
+		z >= oz - margin && z < oz + d + margin;
 }
 
 void World::PlaceHouse(int ox, int oy, int oz)
@@ -245,15 +276,16 @@ void World::PlaceHouse(int ox, int oy, int oz)
 
 void World::MarkPlot(int ox, int oz)
 {
-	// marco de piedra en el suelo, justo afuera del area de 7 x 7
-	for (int x = -1; x <= HOUSE_W; x++)
-		for (int z = -1; z <= HOUSE_D; z++)
-			if (x == -1 || x == HOUSE_W || z == -1 || z == HOUSE_D)
+	// marco de piedra en el suelo, justo afuera de la parcela
+	for (int x = -1; x <= PLOT_W; x++)
+		for (int z = -1; z <= PLOT_D; z++)
+			if (x == -1 || x == PLOT_W || z == -1 || z == PLOT_D)
 				SetBlock(ox + x, SURFACE_Y, oz + z, STONE);
 }
 
 void World::PlaceTree(int x, int z)
 {
+
 	int base = SURFACE_Y + 1;     // primer bloque sobre el pasto
 	int top = base + 3;           // tronco de 4 bloques
 
@@ -292,8 +324,9 @@ void World::PlaceTrees(int count, unsigned int seed)
 		int z = 3 + (int)((state >> 16) % (unsigned int)(SIZE_Z - 6));
 
 		// no plantamos sobre la casa ni sobre la parcela
-		if (InsideArea(x, z, HOUSE_X, HOUSE_Z, 3)) continue;
-		if (InsideArea(x, z, PLOT_X, PLOT_Z, 3)) continue;
+		if (InsideArea(x, z, HOUSE_X, HOUSE_Z, HOUSE_W, HOUSE_D, 3)) continue;
+		if (InsideArea(x, z, PLOT_X, PLOT_Z, PLOT_W, PLOT_D, 3)) continue;
+		if (InsideArea(x, z, HOUSE2_X, HOUSE2_Z, HOUSE_W, HOUSE_D, 3)) continue;
 
 		// ni demasiado cerca de otro arbol
 		bool tooClose = false;
