@@ -181,30 +181,30 @@ bool World::Raycast(glm::vec3 origin, glm::vec3 direction, float maxDistance, gl
 	glm::vec3 tMax(FLT_MAX);   // distancia hasta cruzar el siguiente borde de celda en cada eje
 	glm::vec3 tDelta(FLT_MAX); // distancia necesaria para cruzar una celda completa en cada eje
 
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 3; i++) // calculamos los pasos y las distancias para cada eje
 	{
-		if (dir[i] > 0.0f)
+		if (dir[i] > 0.0f) // si el rayo va en direccion positiva
 		{
-			step[i] = 1;
-			tMax[i] = ((float)(cell[i] + 1) - origin[i]) / dir[i];
-			tDelta[i] = 1.0f / dir[i];
+			step[i] = 1; // paso positivo en el eje i
+			tMax[i] = ((float)(cell[i] + 1) - origin[i]) / dir[i]; // distancia hasta el siguiente borde de celda en el eje i
+			tDelta[i] = 1.0f / dir[i]; // distancia necesaria para cruzar una celda completa en el eje i
 		}
-		else if (dir[i] < 0.0f)
+		else if (dir[i] < 0.0f) // si el rayo va en direccion negativa
 		{
-			step[i] = -1;
-			tMax[i] = (origin[i] - (float)cell[i]) / -dir[i];
-			tDelta[i] = 1.0f / -dir[i];
+			step[i] = -1; // paso negativo en el eje i
+			tMax[i] = (origin[i] - (float)cell[i]) / -dir[i]; // distancia hasta el siguiente borde de celda en el eje i
+			tDelta[i] = 1.0f / -dir[i]; // distancia necesaria para cruzar una celda completa en el eje i
 		}
 	}
 
-	float t = 0.0f;
-	while (t <= maxDistance)
+	float t = 0.0f; // distancia recorrida por el rayo
+	while (t <= maxDistance) // mientras no hayamos superado la distancia maxima
 	{
-		if (GetBlock(cell.x, cell.y, cell.z) != AIR)
+		if (GetBlock(cell.x, cell.y, cell.z) != AIR) //	si la celda actual contiene un bloque, devolvemos la celda y la anterior
 		{
-			hit = cell;
-			previous = prevCell;
-			return true;
+			hit = cell; // celda donde golpea el rayo
+			previous = prevCell; // celda anterior al golpe
+			return true; // golpea un bloque
 		}
 
 		prevCell = cell;
@@ -212,13 +212,13 @@ bool World::Raycast(glm::vec3 origin, glm::vec3 direction, float maxDistance, gl
 		// avanzamos por el eje cuyo borde esta mas cerca
 		int axis;
 		if (tMax.x < tMax.y)
-			axis = (tMax.x < tMax.z) ? 0 : 2;
+			axis = (tMax.x < tMax.z) ? 0 : 2; // eje X o Z
 		else
-			axis = (tMax.y < tMax.z) ? 1 : 2;
+			axis = (tMax.y < tMax.z) ? 1 : 2; // eje Y o Z
 
-		t = tMax[axis];
-		cell[axis] += step[axis];
-		tMax[axis] += tDelta[axis];
+		t = tMax[axis]; // actualizamos la distancia recorrida por el rayo
+		cell[axis] += step[axis]; //	avanzamos a la siguiente celda en el eje correspondiente
+		tMax[axis] += tDelta[axis]; // actualizamos la distancia hasta el siguiente borde de celda en el eje correspondiente
 	}
 
 	return false;
@@ -227,8 +227,8 @@ bool World::Raycast(glm::vec3 origin, glm::vec3 direction, float maxDistance, gl
 // true si (x, z) cae dentro de un area rectangular (mas un margen)
 static bool InsideArea(int x, int z, int ox, int oz, int w, int d, int margin)
 {
-	return x >= ox - margin && x < ox + w + margin &&
-		z >= oz - margin && z < oz + d + margin;
+	return x >= ox - margin && x < ox + w + margin && 
+		z >= oz - margin && z < oz + d + margin; // true si (x, z) cae dentro de un area rectangular (mas un margen)
 }
 
 void World::PlaceHouse(int ox, int oy, int oz)
@@ -293,11 +293,11 @@ void World::PlaceTree(int x, int z)
 	for (int dy = -1; dy <= 2; dy++)
 	{
 		int r = (dy <= 0) ? 2 : 1;
-		for (int dx = -r; dx <= r; dx++)
+		for (int dx = -r; dx <= r; dx++) // capa de hojas de 5x5 o 3x3
 		{
-			for (int dz = -r; dz <= r; dz++)
+			for (int dz = -r; dz <= r; dz++) // capa de hojas de 5x5 o 3x3
 			{
-				bool corner = (std::abs(dx) == r && std::abs(dz) == r);
+				bool corner = (std::abs(dx) == r && std::abs(dz) == r); // true si es una esquina
 				if (corner && (dy <= 0 || dy == 2)) continue;
 				if (GetBlock(x + dx, top + dy, z + dz) == AIR)
 					SetBlock(x + dx, top + dy, z + dz, LEAVES);
@@ -306,14 +306,14 @@ void World::PlaceTree(int x, int z)
 	}
 
 	// tronco
-	for (int y = base; y <= top; y++)
+	for (int y = base; y <= top; y++) // tronco de 4 bloques
 		SetBlock(x, y, z, WOOD);
 }
 
-void World::PlaceTrees(int count, unsigned int seed)
+void World::PlaceTrees(int count, unsigned int seed) // coloca arboles aleatoriamente en el mundo, evitando la casa y la parcela
 {
-	unsigned int state = seed;
-	std::vector<glm::ivec2> placed;
+	unsigned int state = seed; // generador de numeros pseudoaleatorios sencillo (misma semilla = mismo resultado)
+	std::vector<glm::ivec2> placed; // lista de posiciones donde ya se han colocado arboles
 
 	for (int attempt = 0; attempt < 500 && (int)placed.size() < count; attempt++)
 	{
@@ -331,10 +331,10 @@ void World::PlaceTrees(int count, unsigned int seed)
 		// ni demasiado cerca de otro arbol
 		bool tooClose = false;
 		for (const glm::ivec2& p : placed)
-			if (std::abs(x - p.x) + std::abs(z - p.y) < 5) tooClose = true;
+			if (std::abs(x - p.x) + std::abs(z - p.y) < 5) tooClose = true; //	si la distancia Manhattan es menor a 5, consideramos que esta demasiado cerca
 		if (tooClose) continue;
 
-		PlaceTree(x, z);
+		PlaceTree(x, z); // colocamos el arbol en la posicion (x, z)
 		placed.push_back(glm::ivec2(x, z));
 	}
 }
